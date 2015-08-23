@@ -209,13 +209,12 @@ const Erraroo = Ember.Object.extend({
   },
 
   willTransition: function(transition) {
-    const target = transition.targetName;
     let current = this.router.get('currentRouteName');
     if (Ember.isNone(current)) {
       current = "root";
     }
 
-    this.log('Transition ' + current + ' => ' + transition.targetName, 'transition');
+    this.log(current + ' => ' + transition.targetName, 'transition');
   },
 
   reportApplicationRouteError: function(error, transition) {
