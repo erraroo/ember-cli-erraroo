@@ -215,7 +215,6 @@ const Erraroo = Ember.Object.extend({
       current = "root";
     }
 
-    console.log(transition);
     this.log({currentRouteName: current, targetName: transition.targetName, event: 'willTransition'});
   },
 
