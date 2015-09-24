@@ -54,19 +54,19 @@ let logs = [];
 const MAX_LOG_SIZE = 100;
 
 const Erraroo = Ember.Object.extend({
-  log: function(message, level) {
+  log: function(payload, level) {
     if (logs.length > MAX_LOG_SIZE) {
       logs.shift();
     }
 
     logs.push({
       timestamp: (new Date()).getTime(),
-      message: message,
+      payload: payload,
       level: level || 'info',
     });
 
     if (config.debug) {
-      logger.debug(message);
+      logger.debug(payload);
     }
   },
 
@@ -119,7 +119,8 @@ const Erraroo = Ember.Object.extend({
     if (config.enabled) {
       this.install(instance);
       const router = container.lookup('router:main');
-      router.on('willTransition', (t) => this.willTransition(t));
+      router.on('willTransition', (transition) => this.willTransition(transition));
+      router.on('didTransition', () => this.didTransition());
 
       if (config.collectTimingData) {
         this.collectTimingData();
@@ -151,8 +152,8 @@ const Erraroo = Ember.Object.extend({
         }
       }
 
-      logger.error('Ember.onerror', error);
-      return oldEmberOnerror(error);
+      logger.error('Ember.onerror', ...arguments);
+      return oldEmberOnerror(...arguments);
     };
 
     Ember.RSVP.on('error', function(error) {
@@ -164,12 +165,12 @@ const Erraroo = Ember.Object.extend({
         }
       }
 
-      logger.error('Ember.RSVP.onerror', error);
+      logger.error('Ember.RSVP.onerror', ...arguments);
     });
   },
 
   reportError: function(error) {
-    this.log(error.message, 'error');
+    this.log({message: error.message, event: 'error'}, 'error');
 
     if (error.stack) {
       var frames = [];
@@ -214,7 +215,17 @@ const Erraroo = Ember.Object.extend({
       current = "root";
     }
 
-    this.log(current + ' => ' + transition.targetName, 'transition');
+    console.log(transition);
+    this.log({currentRouteName: current, targetName: transition.targetName, event: 'willTransition'});
+  },
+
+  didTransition: function() {
+    let current = this.router.get('currentRouteName');
+    if (Ember.isNone(current)) {
+      current = "root";
+    }
+
+    this.log({currentRouteName: current, event: 'didTransition'});
   },
 
   reportApplicationRouteError: function(error, transition) {
