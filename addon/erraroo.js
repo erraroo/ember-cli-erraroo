@@ -115,7 +115,7 @@ const Erraroo = Ember.Object.extend({
     config.sessionId = guid();
 
     TraceKit.remoteFetching = false;
-    TraceKit.collectWindowErrors = true;
+    TraceKit.collectWindowErrors = config.enabled;
   },
 
   initialize: function(instance) {
