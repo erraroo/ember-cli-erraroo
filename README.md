@@ -2,14 +2,13 @@
 
 This is the ember cli version of the erraroo client.
 
-# Installation
+## Installation
 
-
-## Install the addon
+### Install the addon
 
 ```ember install ember-cli-erraroo```
 
-## Configuration
+### Configuration
 
 ```js
 // config/environment.js
