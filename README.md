@@ -1,25 +1,19 @@
-# Ember-cli-erraroo
+# ember-cli-erraroo
 
-This README outlines the details of collaborating on this Ember addon.
+This is the ember cli version of the erraroo client.
 
-## Installation
+# Installation
 
-* `git clone` this repository
-* `npm install`
-* `bower install`
 
-## Running
+## Install the addon
 
-* `ember server`
-* Visit your app at http://localhost:4200.
+```ember install ember-cli-erraroo```
 
-## Running Tests
+## Configuration
 
-* `ember test`
-* `ember test --server`
-
-## Building
-
-* `ember build`
-
-For more information on using ember-cli, visit [http://www.ember-cli.com/](http://www.ember-cli.com/).
+```js
+// config/environment.js
+ENV['ember-cli-erraroo'] = {
+  token: '<your token here>'
+};
+```
