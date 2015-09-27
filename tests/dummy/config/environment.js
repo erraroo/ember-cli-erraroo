@@ -21,13 +21,13 @@ module.exports = function(environment) {
     contentSecurityPolicy: {
       'connect-src': "http://localhost:3000",
     },
+  };
 
-    ErrarooENV: {
-      environment: environment,
-      debug: true,
-      token: 'jzBqkQ9IG-NosA8Ac0-cRg',
-      endpoint: 'http://localhost:3000/api/v1/events',
-    }
+  ENV['ember-cli-erraroo'] = {
+    debug: true,
+    enabled: true,
+    token: 'jzBqkQ9IG-NosA8Ac0-cRg',
+    endpoint: 'http://localhost:3000/api/v1/events',
   };
 
   if (environment === 'development') {

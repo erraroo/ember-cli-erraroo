@@ -50,6 +50,10 @@ function normalizedPlugin(plugin) {
   return {name: plugin.name, description: plugin.description};
 }
 
+function isEnabled(config, env) {
+  return config.enabled ? true : env.environment === 'production';
+}
+
 let logs = [];
 const MAX_LOG_SIZE = 100;
 
@@ -95,18 +99,19 @@ const Erraroo = Ember.Object.extend({
   },
 
   beforeInitialize: function(env) {
-    if (Ember.isNone(env)) {
+    const cfg = env['ember-cli-erraroo'];
+    if (Ember.isNone(cfg)) {
       config.enabled = false;
       return;
     }
 
-    if (Ember.isNone(env.token)) {
-      logger.warn("Please set your project token on ErrarooENV.token = 'xxx' in config/environment.js");
+    if (Ember.isNone(cfg.token)) {
+      logger.warn("Please set your project token on ENV['ember-cli-erraroo'] = { token:'xxx' } in config/environment.js");
       return;
     }
 
-    Ember.merge(config, env);
-    config.enabled = true;
+    Ember.merge(config, cfg);
+    config.enabled = isEnabled(config, env);
     config.sessionId = guid();
 
     TraceKit.remoteFetching = false;

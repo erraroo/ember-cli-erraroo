@@ -1,7 +1,7 @@
 import ENV from '../config/environment';
 import erraroo from 'ember-cli-erraroo/erraroo';
 
-erraroo.beforeInitialize(ENV['ErrarooENV']);
+erraroo.beforeInitialize(ENV);
 export function initialize(application) {
   erraroo.initialize(application);
 }
