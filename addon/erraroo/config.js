@@ -10,7 +10,7 @@ export default {
   token: null,
 
   // Prints useful debuging messages
-  debug: true,
+  debug: false,
 
   // captures window.timing data
   collectTimingData: true,

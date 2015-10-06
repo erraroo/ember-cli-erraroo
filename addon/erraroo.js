@@ -119,6 +119,7 @@ const Erraroo = Ember.Object.extend({
   },
 
   initialize: function(instance) {
+    const that = this;
     const { container } = instance;
 
     if (config.enabled) {
@@ -126,6 +127,63 @@ const Erraroo = Ember.Object.extend({
       const router = container.lookup('router:main');
       router.on('willTransition', (transition) => this.willTransition(transition));
       router.on('didTransition', () => this.didTransition());
+      router.on('error', () => console.log('errrrrrrrrr', ...arguments));
+
+
+      Ember.run.next(function() {
+        const route = container.lookup('route:application');
+        console.log('next route', route);
+
+        const actions = { route };
+        const error = { actions };
+
+        actions.error = function(e, transition) {
+          //console.log('auto catch things',...arguments);
+
+          //console.log(e.status);
+
+          const { message, status } = e;
+
+          if (typeof status === 'number') {
+            const newError = {
+              name: `Error ${status}`,
+              message: e.responseText,
+            };
+
+            that.reportError(newError);
+          }
+
+          if (message === "Adapter operation failed") {
+            let message = null;
+            let name = null;
+
+            e.errors.forEach(function(err) {
+              that.log(err, 'error-object');
+
+              if (message === null) {
+                message = err.detail;
+              }
+
+              if (name === null) {
+                name = err.title;
+              }
+            });
+
+            const newError = {
+              name,
+              message
+            };
+
+            that.reportError(newError);
+          }
+
+          if (typeof error === 'function') {
+            error(...arguments);
+          }
+        };
+
+        route.actions = actions;
+      });
 
       if (config.collectTimingData) {
         this.collectTimingData();

@@ -19,7 +19,7 @@ module.exports = function(environment) {
     },
 
     contentSecurityPolicy: {
-      'connect-src': "http://localhost:3000",
+      'connect-src': "http://localhost:3000 http://localhost:4200",
     },
   };
 

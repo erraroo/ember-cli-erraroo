@@ -7,6 +7,8 @@ var Router = Ember.Router.extend({
 
 Router.map(function() {
   this.route('home');
+  this.route('ajax-error');
+  this.route('data-error');
 });
 
 export default Router;
