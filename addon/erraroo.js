@@ -183,13 +183,6 @@ const Erraroo = Ember.Object.extend({
       if (config.collectTimingData) {
         this.collectTimingData();
       }
-
-      // wrap the error logger to log messages into our logs
-      const that = this;
-      logger.error = function(message) {
-        oldLoggerError(...arguments);
-        that.log({message: message, event: 'error'}, 'error');
-      };
     }
   },
 
