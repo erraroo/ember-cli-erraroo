@@ -3,9 +3,6 @@ import Ember from 'ember';
 import config from 'ember-cli-erraroo/erraroo/config';
 
 const logger = Ember.Logger;
-
-const oldLoggerError = logger.error;
-
 const { get } = Ember;
 
 function guid() {
