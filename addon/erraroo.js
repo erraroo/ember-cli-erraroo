@@ -1,59 +1,15 @@
 /* global TraceKit, timing */
 import Ember from 'ember';
 import config from 'ember-cli-erraroo/erraroo/config';
+import {
+  guid,
+  normalizedPlugins,
+  normalizeError,
+  isEnabled
+} from 'ember-cli-erraroo/erraroo/helpers';
 
 const logger = Ember.Logger;
 const { get, $ } = Ember;
-
-function guid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-  }
-
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-}
-
-function normalizeFrame(frame) {
-  // reject this frame if there is no url
-  if (!frame.url) {
-    return;
-  }
-
-  // reject this frame if there is no column
-  if (!frame.column) {
-    return;
-  }
-
-  // reject this frame if there is no column
-  if (!frame.line) {
-    return;
-  }
-
-  return {
-    column: frame.column,
-    func: frame.func,
-    line: frame.line,
-    url: frame.url,
-  };
-}
-
-function normalizedPlugins() {
-  const normal = [];
-  const plugins = (window.navigator.plugins || []);
-  for(let i = 0; i < plugins.length; i++) {
-    normal.push(normalizedPlugin(plugins[i]));
-  }
-
-  return normal;
-}
-
-function normalizedPlugin(plugin) {
-  return {name: plugin.name, description: plugin.description};
-}
-
-function isEnabled(config, env) {
-  return config.enabled ? true : env.environment === 'production';
-}
 
 let logs = [];
 const MAX_LOG_SIZE = 100;
@@ -271,18 +227,7 @@ const Erraroo = Ember.Object.extend({
 
   reportError: function(error) {
     this.log({message: error.message, event: 'error'}, 'error');
-
-    if (error.stack) {
-      var frames = [];
-      for(var j = 0; j < error.stack.length; j++) {
-        var frame = normalizeFrame(error.stack[j]);
-        if (frame) {
-          frames.push(frame);
-        }
-      }
-
-      error.stack = frames;
-    }
+    normalizeError(error);
 
     var request = {
       language: window.navigator.language,
