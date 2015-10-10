@@ -2,7 +2,11 @@
 
 This is the ember cli version of the erraroo client.
 
+[![Build Status](https://travis-ci.org/erraroo/ember-cli-erraroo.svg)](https://travis-ci.org/erraroo/ember-cli-erraroo)
+
 ## Installation
+
+Check for details inside of [https://app.erroroo.com](https://app.erraroo.com)
 
 ### Install the addon
 
