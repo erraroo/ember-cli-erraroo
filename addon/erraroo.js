@@ -4,6 +4,10 @@ import config from 'ember-cli-erraroo/erraroo/config';
 
 const logger = Ember.Logger;
 
+const oldLoggerError = logger.error;
+
+const { get } = Ember;
+
 function guid() {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -118,8 +122,51 @@ const Erraroo = Ember.Object.extend({
     TraceKit.collectWindowErrors = config.enabled;
   },
 
+  // There is probably something we can do with
+  // the transition argument.
+  applicationRouteError(error/*, transition*/) {
+    // TODO: What useful information can we gather
+    // about this error and the application state?
+    const { message, status } = error;
+    const { log } = this;
+
+    // Looks like an ajax error
+    if (typeof status === 'number' && status >= 400) {
+      const newError = {
+        name: `Error ${status}`,
+        message: error.responseText,
+      };
+
+      this.reportError(newError);
+    }
+
+    // Should be an ember data errorr
+    if (message === "Adapter operation failed") {
+      let message = null;
+      let name = null;
+
+      error.errors.forEach(function(err) {
+        log(err, 'error-object');
+
+        if (message === null) {
+          message = err.detail;
+        }
+
+        if (name === null) {
+          name = err.title;
+        }
+      });
+
+      const newError = {
+        name,
+        message
+      };
+
+      this.reportError(newError);
+    }
+  },
+
   initialize: function(instance) {
-    const that = this;
     const { container } = instance;
 
     if (config.enabled) {
@@ -129,70 +176,71 @@ const Erraroo = Ember.Object.extend({
       router.on('didTransition', () => this.didTransition());
       router.on('error', () => console.log('errrrrrrrrr', ...arguments));
 
-
-      Ember.run.next(function() {
-        const route = container.lookup('route:application');
-        console.log('next route', route);
-
-        const actions = { route };
-        const error = { actions };
-
-        actions.error = function(e, transition) {
-          //console.log('auto catch things',...arguments);
-
-          //console.log(e.status);
-
-          const { message, status } = e;
-
-          if (typeof status === 'number') {
-            const newError = {
-              name: `Error ${status}`,
-              message: e.responseText,
-            };
-
-            that.reportError(newError);
-          }
-
-          if (message === "Adapter operation failed") {
-            let message = null;
-            let name = null;
-
-            e.errors.forEach(function(err) {
-              that.log(err, 'error-object');
-
-              if (message === null) {
-                message = err.detail;
-              }
-
-              if (name === null) {
-                name = err.title;
-              }
-            });
-
-            const newError = {
-              name,
-              message
-            };
-
-            that.reportError(newError);
-          }
-
-          if (typeof error === 'function') {
-            error(...arguments);
-          }
-        };
-
-        route.actions = actions;
-      });
+      if (config.installRouteHandler) {
+        this.installRouteHandler(container);
+      }
 
       if (config.collectTimingData) {
         this.collectTimingData();
       }
+
+      // wrap the error logger to log messages into our logs
+      const that = this;
+      logger.error = function(message) {
+        oldLoggerError(...arguments);
+        that.log({message: message, event: 'error'}, 'error');
+      };
     }
   },
 
+  // It seems in order to get the /error.hbs on a load
+  // you need to incldue an
+  // actions: {
+  //   error() {
+  //     return true;
+  //   }
+  // }
+  //
+  installRouteHandler(container) {
+    const addon = this;
+
+    Ember.run.next(function() {
+      const route = container.lookup('route:application');
+
+      const actions = get(route, 'actions');
+      const error = get(actions, 'error');
+      let last = null;
+
+      actions.error = function(err, transition) {
+        // when entering an app this can be called twice
+        if (err === last) {
+          return;
+        }
+
+        last = err;
+
+        let ret = true;
+
+        if (typeof error === 'function') {
+          // ensure that we capture their error state,
+          // they can retrun false and the app should not
+          // transition to any error state.
+          //
+          // however we should probably document this as
+          // since it isn't wildly known
+          ret = error(err, transition);
+        }
+
+        addon.applicationRouteError(...arguments);
+        return ret;
+      };
+
+      route.actions = actions;
+    });
+  },
+
   install: function(instance) {
-    logger.debug('installing');
+    logger.debug('installing erraroo');
 
     const { container } = instance;
 
@@ -215,7 +263,7 @@ const Erraroo = Ember.Object.extend({
         }
       }
 
-      logger.error('Ember.onerror', ...arguments);
+      logger.error(...arguments);
       return oldEmberOnerror(...arguments);
     };
 
@@ -228,7 +276,7 @@ const Erraroo = Ember.Object.extend({
         }
       }
 
-      logger.error('Ember.RSVP.onerror', ...arguments);
+      logger.error(...arguments);
     });
   },
 
@@ -288,21 +336,6 @@ const Erraroo = Ember.Object.extend({
     }
 
     this.log({currentRouteName: current, event: 'didTransition'});
-  },
-
-  reportApplicationRouteError: function(error, transition) {
-    const err = {
-      name: "Error while processing route: "+ transition.targetName,
-    };
-
-    if (error.errors) {
-      error = error.errors[0];
-      err.message =  `${error.title} ${error.status} ${error.detail}`;
-    } else {
-      err.message = `Error ${error.status} ${error.responseText}`;
-    }
-
-    this.reportError(err);
   }
 });
 

@@ -20,4 +20,10 @@ export default {
 
   // the unique session id
   sessionId: null,
+
+  // installs the route mixin so that we can catch
+  // application level errors for you.  Optionally
+  // you can just handle the errors yourself and
+  // call the erraroo api directly.
+  installRouteHandler: true,
 };
