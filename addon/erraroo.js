@@ -3,7 +3,7 @@ import Ember from 'ember';
 import config from 'ember-cli-erraroo/erraroo/config';
 
 const logger = Ember.Logger;
-const { get } = Ember;
+const { get, $ } = Ember;
 
 function guid() {
   function s4() {
@@ -76,7 +76,7 @@ const Erraroo = Ember.Object.extend({
   },
 
   makeRequest: function(kind, data) {
-    return Ember.$.ajax({
+    return $.ajax({
       url: config.endpoint,
       data: this.makePayload(kind, data),
       dataType: 'json',
@@ -171,7 +171,6 @@ const Erraroo = Ember.Object.extend({
       const router = container.lookup('router:main');
       router.on('willTransition', (transition) => this.willTransition(transition));
       router.on('didTransition', () => this.didTransition());
-      router.on('error', () => console.log('errrrrrrrrr', ...arguments));
 
       if (config.installRouteHandler) {
         this.installRouteHandler(container);
@@ -243,7 +242,7 @@ const Erraroo = Ember.Object.extend({
       that.reportError(errorReport);
     });
 
-    var oldEmberOnerror = Ember.onerror || Ember.K;
+    const oldEmberOnerror = Ember.onerror || Ember.K;
     Ember.onerror = function(error) {
       try {
         TraceKit.report(error);
