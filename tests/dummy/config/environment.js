@@ -28,6 +28,7 @@ module.exports = function(environment) {
     enabled: true,
     token: 'jzBqkQ9IG-NosA8Ac0-cRg',
     endpoint: 'http://localhost:3000/api/v1/events',
+    collectTimingData: false,
   };
 
   if (environment === 'development') {

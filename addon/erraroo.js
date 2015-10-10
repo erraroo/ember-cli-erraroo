@@ -14,6 +14,16 @@ const { get, $ } = Ember;
 let logs = [];
 const MAX_LOG_SIZE = 100;
 
+function lookup(instance, name) {
+  // 2.1.0 Introduces a new lookup api.
+  let lookup = instance.lookup;
+  if (!lookup) {
+    lookup = instance.container.lookup;
+  }
+
+  return lookup.call(instance, name);
+}
+
 const Erraroo = Ember.Object.extend({
   log: function(payload, level) {
     if (logs.length > MAX_LOG_SIZE) {
@@ -120,16 +130,15 @@ const Erraroo = Ember.Object.extend({
   },
 
   initialize: function(instance) {
-    const { container } = instance;
-
     if (config.enabled) {
       this.install(instance);
-      const router = container.lookup('router:main');
+
+      const router = lookup(instance, 'router:main');
       router.on('willTransition', (transition) => this.willTransition(transition));
       router.on('didTransition', () => this.didTransition());
 
       if (config.installRouteHandler) {
-        this.installRouteHandler(container);
+        this.installRouteHandler(instance);
       }
 
       if (config.collectTimingData) {
@@ -146,11 +155,11 @@ const Erraroo = Ember.Object.extend({
   //   }
   // }
   //
-  installRouteHandler(container) {
+  installRouteHandler(instance) {
     const addon = this;
 
     Ember.run.next(function() {
-      const route = container.lookup('route:application');
+      const route = lookup(instance, 'route:application');
 
       const actions = get(route, 'actions');
       const error = get(actions, 'error');
@@ -187,12 +196,9 @@ const Erraroo = Ember.Object.extend({
   install: function(instance) {
     logger.debug('installing erraroo');
 
-    const { container } = instance;
-
     const that = this;
     that.instance = instance;
-    that.container = container;
-    that.router = container.lookup('router:main');
+    that.router = lookup(instance, 'router:main');
 
     TraceKit.report.subscribe(function reportError(errorReport) {
       that.reportError(errorReport);
@@ -226,6 +232,10 @@ const Erraroo = Ember.Object.extend({
   },
 
   reportError: function(error) {
+    if (typeof error.message === 'undefined') {
+      return;
+    }
+
     this.log({message: error.message, event: 'error'}, 'error');
     normalizeError(error);
 
