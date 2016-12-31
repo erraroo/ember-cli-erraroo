@@ -204,7 +204,7 @@ const Erraroo = Ember.Object.extend({
       that.reportError(errorReport);
     });
 
-    const oldEmberOnerror = Ember.onerror || Ember.K;
+    const oldEmberOnerror = Ember.onerror || function() {};
     Ember.onerror = function(error) {
       try {
         TraceKit.report(error);
